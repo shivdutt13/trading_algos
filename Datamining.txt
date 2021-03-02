@@ -1,0 +1,190 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+
+/*  
+ * This class makes uses data mining techniques. We find all stocks that are
+ * "similar" enough to the stock in questions (say stock A). We then find
+ * the average of the returns of all those similar stocks and based on that 
+ * decide whether to buy stock A or not. 
+ */
+
+public class DataMining {
+	
+	
+	static Double totalDistance = 0.0;
+	static Double totalReturns = 0.0;
+
+	public static void main(String[] args) throws FileNotFoundException {
+
+		/*
+		 * STEP 1. READ IN HEADER
+		 */
+
+		// create the file scanner
+		Scanner scanner = new Scanner(
+				new File(
+						"C:\\Users\\Shiv\\Desktop\\Saahill Results\\Data_Mining_File.txt"));
+
+		// Read in header information
+		String header = scanner.nextLine();
+		//String header2 = scanner.nextLine();
+
+		// Current stock
+		String currentStock = scanner.nextLine();
+		StringTokenizer st = new StringTokenizer(currentStock, ";");
+		// 40 parameters - all normalized by formula (y = (x-a)/(b-a))
+		st.nextToken();
+		String stockName = st.nextToken(); // stock name
+		st.nextToken();
+		st.nextToken();
+		st.nextToken();
+		Double stockUniverseReturns = Double.parseDouble(st.nextToken());
+		st.nextToken();
+		st.nextToken();
+		Double stockMarketCapitalization = (Double.parseDouble(st.nextToken()) - 508)/(2189026-508);
+		st.nextToken();
+		Double stockHoldersEquity = (Double.parseDouble(st.nextToken()) + 7.16)/ (14.66 + 7.16);
+		st.nextToken();
+		Double stockReturnOnAvgAssets = (Double.parseDouble(st.nextToken()) + 508.9)/(19921.64 + 508.9);
+		st.nextToken();
+		Double stockAssetsToEquity = (Double.parseDouble(st.nextToken()) + 56298.6)/(3337 + 56298);
+		st.nextToken();
+		Double stock3YrTurnOver = (Double.parseDouble(st.nextToken()) + 0.03)/(73.33 + 0.03); 
+		st.nextToken();
+		Double stockBeta = (Double.parseDouble(st.nextToken()) + 1168)/(6241+1168);
+		st.nextToken();
+		st.nextToken();
+		st.nextToken();
+		Double stockDividendYield = Double.parseDouble(st.nextToken())/(149.9);
+		st.nextToken();
+		st.nextToken();
+		st.nextToken();
+		Double stockLTDebtPercentage = Double.parseDouble(st.nextToken())/(23314);
+		st.nextToken();
+		Double stock3YrNetIncome = (Double.parseDouble(st.nextToken()) + 2223547)/(4644 + 2223547);
+		st.nextToken();
+		st.nextToken();
+		st.nextToken();
+		st.nextToken();
+		st.nextToken();
+		Double stockROEquity = (Double.parseDouble(st.nextToken()) + 31958)/(22957+31958);
+		st.nextToken();
+		st.nextToken();
+		Double stockSTDebtPercentage = Double.parseDouble(st.nextToken())/(8);
+		Double stockDebtToEquity = Double.parseDouble(st.nextToken())/(104098);
+		st.nextToken();
+
+		int lineNumber = 0;
+		
+		List<Double> returns = new ArrayList<Double>();
+
+		// Read in file
+		while (scanner.hasNextLine()) {
+
+			// read in the line and parse
+			lineNumber++;
+			// System.out.println("Line number is: " + lineNumber);
+			String line = scanner.nextLine(); // read line
+			StringTokenizer tokenizer = new StringTokenizer(line, ";"); // split into
+																		// Strings by ;
+
+			tokenizer.nextToken();
+			String name = tokenizer.nextToken(); // stock name
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			Double universeReturns = Double.parseDouble(tokenizer.nextToken());
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			Double marketCapitalization = (Double.parseDouble(tokenizer.nextToken()) - 508)/(2189026-508);
+			tokenizer.nextToken();
+			Double holdersEquity = (Double.parseDouble(tokenizer.nextToken()) + 7.16)/ (14.66 + 7.16);
+			tokenizer.nextToken();
+			Double returnOnAvgAssets = (Double.parseDouble(tokenizer.nextToken()) + 508.9)/(19921.64 + 508.9);
+			tokenizer.nextToken();
+			Double assetsToEquity = (Double.parseDouble(tokenizer.nextToken()) + 56298.6)/(3337 + 56298);
+			tokenizer.nextToken();
+			Double threeYrTurnOver = (Double.parseDouble(tokenizer.nextToken()) + 0.03)/(73.33 + 0.03); 
+			tokenizer.nextToken();
+			Double beta = (Double.parseDouble(tokenizer.nextToken()) + 1168)/(6241+1168);
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			Double dividendYield = Double.parseDouble(tokenizer.nextToken())/(149.9);
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			Double LTDebtPercentage = Double.parseDouble(tokenizer.nextToken())/(23314);
+			tokenizer.nextToken();
+			Double threeYrNetIncome = (Double.parseDouble(tokenizer.nextToken()) + 2223547)/(4644 + 2223547);
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			Double ROEquity = (Double.parseDouble(tokenizer.nextToken()) + 31958)/(22957+31958);
+			tokenizer.nextToken();
+			tokenizer.nextToken();
+			Double STDebtPercentage = Double.parseDouble(tokenizer.nextToken())/(8);
+			Double debtToEquity = Double.parseDouble(tokenizer.nextToken())/(104098);
+			tokenizer.nextToken();
+
+
+			// calculate the distance
+			double distance = Math.sqrt((marketCapitalization - stockMarketCapitalization)
+					* (marketCapitalization - stockMarketCapitalization)
+					+ (holdersEquity - stockHoldersEquity)
+					* (holdersEquity - stockHoldersEquity)
+					+ (returnOnAvgAssets - stockReturnOnAvgAssets)
+					* (returnOnAvgAssets - stockReturnOnAvgAssets)
+					+ (assetsToEquity - stockAssetsToEquity)
+					* (assetsToEquity - stockAssetsToEquity)
+					+ +(threeYrTurnOver - stock3YrTurnOver)
+					* (threeYrTurnOver - stock3YrTurnOver)
+					+ (beta - stockBeta)
+					* (beta - stockBeta)
+					+ (dividendYield - stockDividendYield)
+					* (dividendYield - stockDividendYield)
+					+ (LTDebtPercentage - stockLTDebtPercentage)
+					* (LTDebtPercentage - stockLTDebtPercentage)
+					+ (threeYrNetIncome - stock3YrNetIncome)
+					* (threeYrNetIncome - stock3YrNetIncome)
+					+ (ROEquity - stockROEquity)
+					* (ROEquity - stockROEquity)
+					+ (STDebtPercentage - stockSTDebtPercentage)
+					* (STDebtPercentage - stockSTDebtPercentage)
+					+ (debtToEquity - stockDebtToEquity)
+					* (debtToEquity - stockDebtToEquity));
+			
+			if(distance < 0.05){
+				returns.add(universeReturns);
+			}
+			
+			totalDistance += distance;
+			totalReturns += universeReturns;
+			
+			//System.out.println("The distance is: " + distance);
+			//System.out.println("Line number is: " + lineNumber); 143,854
+			if(lineNumber == 143855){
+			System.out.println("Average Distance is: " + totalDistance/lineNumber); // 129.26
+			System.out.println("Average Returns is: " + totalReturns/lineNumber);
+			System.out.println("Number of similar stocks is: " + returns.size());
+			
+			Double sum= 0.0; 
+		     for (Double i:returns){
+		         sum = sum + i;
+		     }
+		     sum /= lineNumber;
+			
+			System.out.println("Average returns of group is " + sum);
+			System.out.println("Return of stock is: " + stockUniverseReturns);
+			}
+		}
+
+	}
+
+}

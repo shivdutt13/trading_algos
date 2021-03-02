@@ -1,0 +1,92 @@
+% Step: Turn all warnings off
+warning('off','all');
+warning;
+
+Final_array = zeros(100, 1500);
+
+row = 0;
+
+for backward = [10:10:100]
+    for forward = [3:1:8]
+        Current = 100;
+        row = row + 1;
+
+        Final_array(row, 1) = backward;
+        Final_array(row, 2) = forward;
+        Final_array(row, 3) = 100;
+
+        
+%Constants
+
+% Step 0: Add required paths 
+%addpath( 'C:\Program Files\MATLAB\R2012a\toolbox\matlab\polyfun\polyfit.m');
+
+% Step 1: Read in the excel file
+Excel_Col_Array = xlsread('C:\Users\Shiv\Desktop\Work\Poshak Hedge Fund\Barkatullah 1\TCS_5_yr_data');
+Total_Data_Points = size(Excel_Col_Array);
+
+% Step 2: Transpose becuase it is a column vector
+Excel_Row_Array = transpose(Excel_Col_Array);
+
+% Step 3: Reverse order to get earliest date first
+Ascending_Data_Points = fliplr(Excel_Row_Array);
+
+% Step: Go through all points of time series
+for u = (backward+1):(Total_Data_Points - forward)
+
+% Step 7: Create x-axis of backward points
+for i = 1:backward
+x(i) = i;
+end
+
+
+% Step 8: Create y axis of data points (choose number = backward)
+b = 1;
+for j = u-backward:u-1
+y(b) = Ascending_Data_Points(j);
+b = b+1;
+end
+
+% Step 9: Getting the polyfit polynomial
+degree = 20;
+p = polyfit(x, y, degree);
+
+
+% Step 10: Calculate backward points for the fitted polynomial
+c = 1;
+for k = u-backward:u-1
+vec(c) = polyval(p, k);
+c = c+1;
+end
+
+
+% Step 12: Getting the next forward entries 
+Real_Forward_Point = Ascending_Data_Points(u+forward);
+Predicted_Forward_Point = polyval(p, u+forward);
+
+
+
+% Step 13: Results 
+if Predicted_Forward_Point - Ascending_Data_Points(u) > 0
+    Profit = Real_Forward_Point - Ascending_Data_Points(u);
+else
+    Profit = Ascending_Data_Points(u) - Real_Forward_Point;
+end
+
+Percentage_Return = (Profit*100)/Ascending_Data_Points(u);
+Current = Current + ((Current*Percentage_Return)/100);
+
+% Step: Adding return to the row
+%Row_array = cat(2, Row_array, Percentage_Return);
+
+%while size(Row_array) ~= (Total_Data_Points - forward - backward)
+%Row_array = cat(2, Row_array, [ 0 ]);
+%end
+
+Final_array(row, u-backward+3) = Current;
+
+end
+
+    end
+end
+

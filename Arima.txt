@@ -1,0 +1,106 @@
+#Automated process and coding tutorial for Day Trader
+#Next day projected returns for stock
+DayTrader <- function() {
+#Burki ji's solution for the automation of stock returns
+# All blessings and glory be to the Poshak
+
+#---------------------------------------------------------------------------------------
+#Set R working directory to the location where all your CSV files are located.
+location_of_files = getwd() #You can change this to other location
+#Extract only the csv files from that directory
+files = list.files(path = location_of_files)
+files =files[grep("csv",files)]
+#----------------------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------------------------------------------
+#check the format of the file to ensure that there is no mismatch between function's expectations
+#and input format
+# I assume that all files are from same source and so checking one should be okay
+#Note that this requires homogeneity in downloading format etc which should be automated
+#---------------------------------------------------------------------------------------------------------------
+
+
+#----------------------------------------------------------------------------------------------------------------
+#I use a function to predict for the next day: ONE DAY FORWARD PREDICTION
+projection <-function (filename, colnumber,backtesting, lags, differencing,movingaverage) {
+#file name: enter as "XX.csv"
+#col name: column number with average price
+#backtesting: number of days to use to build model
+#lags: number of lags to build model lags <backtesting-1
+stock<- read.csv(file=filename,header=TRUE,sep=",");
+price <-stock[,colnumber] 
+price <-price[(length(price)-(backtesting-1)):length(price)]
+library(forecast)
+fit <- arima(price, order=c(lags,differencing,movingaverage)) # robust config: differencing = 1, order of moving average = 2
+priceforecasts <- forecast.Arima(fit, h=1)
+return(priceforecasts)
+}
+#----------------------------------------------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------------------------------------------
+#Function to process input from projection
+#Note this is from http://cran.r-project.org/web/packages/forecast/forecast.pdf  pp. 26
+#Object type is projection
+process_projection <-function (projection, last_close_price, stockname) {
+#Extract relevant components
+point = projection$mean[1]
+point_80low = projection$lower[1,1]
+point_95low = projection$lower[1,2]
+point_80upper = projection$upper[1,1]
+point_95upper = projection$upper[1,2]
+#Compile components
+processed_data = c(point, point_80low, point_95low, point_80upper, point_95upper)
+#Consider percentages
+processed_data_perc = (processed_data - last_close_price)*(100/last_close_price)
+#Add to data
+processed_data = c(stockname, last_close_price, processed_data, processed_data_perc)
+return(processed_data)
+}
+#----------------------------------------------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------------------------------------------
+#Set the matrix to record data
+labels =c("Stock","Last Close Price", "Expected", "80% low", "95% low", "80% up", "95% up", "Expected(%)", "80% low(%)", "95% low(%)", "80% up(%)", "95% up(%)")
+record = matrix(labels,nrow=1)
+#I assume that the data is in descending order, (last date last), and that last price is in col. 8
+last_price_col = 8
+#-------------------------------------------
+#Set parameters for prediction
+colnumber = 10 #I use average price
+backtesting = 20 #20 days backtesting
+lags = 5 #5 day lag
+differencing = 0 #no differencing needed for projection
+movingaverage = 2 #2 days moving average
+#----------------------------------------------
+#Compute projection for each file and add to matrix
+for ( i in 1:length(files) ) {
+#Get stock name and last price
+stockname = unlist(strsplit(files[i], split='.', fixed=TRUE))[1]
+last_close_price = read.csv(files[i])[nrow(read.csv(files[i])),last_price_col]
+#Get projection
+projection_curr = projection(files[i], colnumber,backtesting, lags, differencing,movingaverage)
+#Process projection
+process_projection_curr =process_projection(projection_curr, last_close_price, stockname)
+#Add to matrix
+record = rbind(record, process_projection_curr)
+}
+#-----------------------------------------------------------------
+#Process matrix for printing
+record = record[(2:nrow(record)),]
+rownames(record)= NULL
+colnames(record) = labels
+#Create file name with todays data
+filename = paste(Sys.Date(), "Output.csv")
+write.csv(record, file=filename)
+#Since this is also a CSV file you might want to add another path so that it is not read in with our data files next time we use this
+
+#---------------------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------------------------------------
+#This concludes our tutorial
+#All blessings and glory be to the Poshak. HE alone will guide us through this darkness
+#-----------------------------------------------------------------------------------------------------
+}
